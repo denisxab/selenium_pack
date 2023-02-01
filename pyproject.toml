@@ -2,9 +2,9 @@
 name = "selenium-pack"
 version = "0.1.0"
 description = ""
-authors = ["our ame <you@example.com>"]
+authors = ["Denis Kustov <denis-kustov@rambler.ru>"]
 readme = "README.md"
-packages = [{include = "selenium_pack"}]
+
 
 [tool.poetry.dependencies]
 python = "^3.10"
