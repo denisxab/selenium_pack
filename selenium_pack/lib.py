@@ -43,8 +43,8 @@ class ViewSelenium:
         self,
         executable_path: str,
         path_to_browser: str,
-        options: Options,
         type_browser: EBrowser,
+        options: Options = None,
         _PathSaveCookies: str | pathlib.Path = None
     ):
         """
@@ -60,7 +60,11 @@ class ViewSelenium:
         Скачать драйвер https://github.com/mozilla/geckodriver/releases/latest
         - linux:https://github.com/mozilla/geckodriver/releases/latest
         """
+        # Путь для сохранения куки
         self._PathSaveCookies = _PathSaveCookies
+        # Опции по умолчанию
+        if not options:
+            options = Options()
         # Путь к браузеру
         options.binary_location = path_to_browser
         self.browser: WebDriver
