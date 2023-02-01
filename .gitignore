@@ -1,0 +1,6 @@
+__pycache__/
+venv
+geckodriver.exe
+user_data/
+geckodriver.log
+dist/
