@@ -9,17 +9,36 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 
 
+class GriverBrowser:
+    # Имя браузера
+    name: str
+    # Путь к браузеру для Windows по умолчанию
+    win_path_to_browser: str
+
+    def AntiBot(options: Options):
+        """Метод для скрытия бота"""
+        ...
+
+
 class EBrowser:
     """
     Настройки для разных браузеров
     """
 
-    class Firefox:
+    class Firefox(GriverBrowser):
         name = 'Firefox'
-        # Путь к браузеру для Windows по умолчанию
         win_path_to_browser = r"C:\Program Files\Mozilla Firefox\firefox.exe"
 
-    class Chrome:
+        def AntiBot(options: Options):
+            options = webdriver.FirefoxOptions()
+            
+            options.add_argument(
+                "user-agent=Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
+            options.set_preference("dom.webdriver.enabled", False)
+
+            return options
+
+    class Chrome(GriverBrowser):
         name = 'Chrome'
         """
         Установка Chrome драйвер на Linux
@@ -28,6 +47,11 @@ class EBrowser:
         2. executable_path="/usr/lib/chromium-browser/chromedriver"
         """
         win_path_to_browser = "???"
+
+        def AntiBot(options: Options):
+            options.add_argument(
+                "--disable-blink-features=AutomationControlled")
+            return options
 
 
 class ViewSelenium:
@@ -42,9 +66,10 @@ class ViewSelenium:
         self,
         executable_path: str,
         path_to_browser: str,
-        type_browser: EBrowser,
+        type_browser: GriverBrowser,
         options: Options = None,
-        _PathSaveCookies: str | pathlib.Path = None
+        _PathSaveCookies: str | pathlib.Path = None,
+        AntiBot=True
     ):
         """
         Инициализация браузера
@@ -53,7 +78,9 @@ class ViewSelenium:
         path_to_browser: Путь к браузеру
         options: Опции для браузера
         type_browser: Тип браузера
-
+        _PathSaveCookies: Путь для сохранения куки
+        AntiBot: Если True то будет применять настройки для скрытия бота
+        
         ======================================================
 
         Скачать драйвер https://github.com/mozilla/geckodriver/releases/latest
@@ -64,6 +91,9 @@ class ViewSelenium:
         # Опции по умолчанию
         if not options:
             options = Options()
+        # Если True то будет применять настройки для скрытия бота
+        if AntiBot:
+            options = type_browser.AntiBot(options)
         # Путь к браузеру
         options.binary_location = path_to_browser
         self.browser: WebDriver
