@@ -5,7 +5,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -162,7 +161,7 @@ class ViewSelenium:
     ##
 
     def find_by_css_selector(
-        self, css_selector: str, many: bool = False, wait: bool = True, elm: WebElement | WebDriver = None, _max_wait_time: float = 10.0
+        self, css_selector: str, *, many: bool = False, is_wait: bool = True, _max_wait_time: float = 3.0, elm: WebElement | WebDriver = None
     ) -> WebElement | list[WebElement]:
         """
         Получить элемент(Ы) по CSS селектору
@@ -170,20 +169,29 @@ class ViewSelenium:
         css_selector: CSS селектор
         elm: Элемент с которого начать поиск, по умолчанию с `document`
         many: Если True то вернет несколько записей, если False то вернет только одну
-        wait: Если True то будет ждать появления элемента в DOM дереве
+        is_wait: Если True то будет ждать появления элемента в DOM дереве
         _max_wait_time: Сколько(секунд) максимум ожидать
         """
         if not elm:
             elm = self.browser
 
-        if wait:
-            # Сколько максимум ждать
-            wait = WebDriverWait(self.browser, _max_wait_time)
-            # Ожидать пока элемент загрузиться (Ожидание проверки того, что элемент присутствует в DOM страницы и виден. )
-            # https://www.selenium.dev/selenium/docs/api/py/webdriver_support/selenium.webdriver.support.expected_conditions.html
-            return wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
-
         if many:
-            return elm.find_elements(By.CSS_SELECTOR, css_selector)
+            if is_wait:
+                # Сколько максимум ждать
+                wait = WebDriverWait(elm, _max_wait_time)
+                # Ожидать пока элемент загрузиться (Ожидание проверки того, что элемент присутствует в DOM страницы и виден. )
+                # https://www.selenium.dev/selenium/docs/api/py/webdriver_support/selenium.webdriver.support.expected_conditions.html
+                # visibility_of_all_elements_located - Все видны
+                # visibility_of_any_elements_located - Виден хотя бы один
+                return wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
+            else:
+                return elm.find_elements(By.CSS_SELECTOR, css_selector)
         else:
-            return elm.find_element(By.CSS_SELECTOR, css_selector)
+            if is_wait:
+                # Сколько максимум ждать
+                wait = WebDriverWait(elm, _max_wait_time)
+                # Ожидать пока элемент загрузиться (Ожидание проверки того, что элемент присутствует в DOM страницы и виден. )
+                # https://www.selenium.dev/selenium/docs/api/py/webdriver_support/selenium.webdriver.support.expected_conditions.html
+                return wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
+            else:
+                return elm.find_element(By.CSS_SELECTOR, css_selector)
