@@ -7,6 +7,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class GriverBrowser:
@@ -17,6 +18,10 @@ class GriverBrowser:
 
     def AntiBot(options: Options):
         """Метод для скрытия бота"""
+        ...
+
+    def new_options():
+        """Создать новые опции для конкретного браузера"""
         ...
 
 
@@ -30,13 +35,13 @@ class EBrowser:
         win_path_to_browser = r"C:\Program Files\Mozilla Firefox\firefox.exe"
 
         def AntiBot(options: Options):
-            options = webdriver.FirefoxOptions()
-            
             options.add_argument(
                 "user-agent=Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
             options.set_preference("dom.webdriver.enabled", False)
-
             return options
+
+        def new_options() -> Options:
+            return webdriver.FirefoxOptions()
 
     class Chrome(GriverBrowser):
         name = 'Chrome'
@@ -53,6 +58,9 @@ class EBrowser:
                 "--disable-blink-features=AutomationControlled")
             return options
 
+        def new_options() -> Options:
+            return webdriver.ChromeOptions()
+
 
 class ViewSelenium:
     """
@@ -67,9 +75,9 @@ class ViewSelenium:
         executable_path: str,
         path_to_browser: str,
         type_browser: GriverBrowser,
-        options: Options = None,
+        AntiBot=True,
+        _options: Options = None,
         _PathSaveCookies: str | pathlib.Path = None,
-        AntiBot=True
     ):
         """
         Инициализация браузера
@@ -80,7 +88,7 @@ class ViewSelenium:
         type_browser: Тип браузера
         _PathSaveCookies: Путь для сохранения куки
         AntiBot: Если True то будет применять настройки для скрытия бота
-        
+
         ======================================================
 
         Скачать драйвер https://github.com/mozilla/geckodriver/releases/latest
@@ -88,26 +96,26 @@ class ViewSelenium:
         """
         # Путь для сохранения куки
         self._PathSaveCookies = _PathSaveCookies
-        # Опции по умолчанию
-        if not options:
-            options = Options()
+        # Опции по умолчанию для каждого браузера
+        if not _options:
+            _options = type_browser.new_options()
         # Если True то будет применять настройки для скрытия бота
         if AntiBot:
-            options = type_browser.AntiBot(options)
+            type_browser.AntiBot(_options)
         # Путь к браузеру
-        options.binary_location = path_to_browser
+        _options.binary_location = path_to_browser
         self.browser: WebDriver
         # Создаем браузер
         match type_browser:
             case EBrowser.Firefox:
                 self.browser = webdriver.Firefox(
                     executable_path=executable_path,
-                    options=options
+                    options=_options
                 )
             case EBrowser.Chrome:
                 self.browser = webdriver.Chrome(
                     executable_path=executable_path,
-                    options=options
+                    options=_options
                 )
     ##
     # Работа с непосредственным браузером
@@ -154,7 +162,7 @@ class ViewSelenium:
     ##
 
     def find_by_css_selector(
-        self, css_selector: str, many: bool = False, elm: WebElement | WebDriver = None
+        self, css_selector: str, many: bool = False, wait: bool = True, elm: WebElement | WebDriver = None, _max_wait_time: float = 10.0
     ) -> WebElement | list[WebElement]:
         """
         Получить элемент(Ы) по CSS селектору
@@ -162,9 +170,19 @@ class ViewSelenium:
         css_selector: CSS селектор
         elm: Элемент с которого начать поиск, по умолчанию с `document`
         many: Если True то вернет несколько записей, если False то вернет только одну
+        wait: Если True то будет ждать появления элемента в DOM дереве
+        _max_wait_time: Сколько(секунд) максимум ожидать
         """
         if not elm:
             elm = self.browser
+
+        if wait:
+            # Сколько максимум ждать
+            wait = WebDriverWait(self.browser, _max_wait_time)
+            # Ожидать пока элемент загрузиться (Ожидание проверки того, что элемент присутствует в DOM страницы и виден. )
+            # https://www.selenium.dev/selenium/docs/api/py/webdriver_support/selenium.webdriver.support.expected_conditions.html
+            return wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
+
         if many:
             return elm.find_elements(By.CSS_SELECTOR, css_selector)
         else:
