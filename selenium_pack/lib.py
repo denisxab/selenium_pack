@@ -338,43 +338,56 @@ class ViewSelenium:
 
 
 class _RequestsPackBase():
+    """
+    Синхронный код
+    """
 
     session_sync = HTMLSession()
 
     @classmethod
-    def get(cls, url: list[str], cookies: dict[str, str], headers: dict[str, str]) -> HTMLResponse:
+    def get(cls, url: list[str], cookies: dict[str, str], headers: dict[str, str], render=False) -> HTMLResponse:
         """
         Сделать один GET запрос
 
+        render: Если True то отренедрит JavaScript
+
         return: Ответ
         """
-        return cls.session_sync.get(
+        res = cls.session_sync.get(
             url, cookies=cookies, headers=headers
         )
+        # Если True то отренедрит JavaScript
+        if render:
+            res.html.render()
+        return res
 
 
 class _RequestsPackAsync():
     """
-    Удобное взаимодействие с библиотекой `requests_html`
+    Асинхронный код
     """
 
     session_async = AsyncHTMLSession()
 
     @classmethod
-    def get_many(cls, urls: list[str], cookies: dict[str, str], headers: dict[str, str]) -> deque[HTMLResponse]:
+    def get_many(cls, urls: list[str], cookies: dict[str, str], headers: dict[str, str], render=False) -> deque[HTMLResponse]:
         """
         Сделать несколько асинхронных GET запросов
+
+        render: Если True то отренедрит JavaScript
 
         return: Ответы
         """
         async def _wrap():
             res = deque()
             for url in urls:
-                res.append(
-                    await cls.session_async.get(
-                        url, cookies=cookies, headers=headers
-                    )
+                _r = await cls.session_async.get(
+                    url, cookies=cookies, headers=headers
                 )
+                # Если True то отренедрит JavaScript
+                if render:
+                    await _r.html.arender()
+                res.append(_r)
             return res
 
         return cls.session_async.run(_wrap)
@@ -383,5 +396,7 @@ class _RequestsPackAsync():
 class RequestsPack(_RequestsPackBase, _RequestsPackAsync):
     """
     Класс для экспорта
+
+    Удобное взаимодействие с библиотекой `requests_html`
     """
     ...
