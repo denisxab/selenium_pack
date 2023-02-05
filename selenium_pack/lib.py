@@ -10,6 +10,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.firefox.options import Options
+from selenium.common.exceptions import NoSuchElementException
 from typing import Callable
 import threading
 import tkinter as tk
@@ -128,7 +131,7 @@ class ViewSelenium:
         self.select_url: str = ''
         ##
         # Переменные для Tkinter
-        ## 
+        ##
         # Главное приложения Tkinter
         self.tk_windows: tk.Tk
         # Хранения пользовательских кнопок для Tkinter
@@ -190,7 +193,7 @@ class ViewSelenium:
     ##
 
     def find_by_css_selector(
-        self, css_selector: str, *, many: bool = False, is_wait: bool = True, _max_wait_time: float = 3.0, elm: WebElement | WebDriver = None
+        self, css_selector: str, *, many: bool = False, is_wait: bool = True, _max_wait_time: float = 3.0, elm: WebElement | WebDriver = None, error_ok: bool = False
     ) -> WebElement | list[WebElement]:
         """
         Получить элемент(Ы) по CSS селектору
@@ -200,34 +203,42 @@ class ViewSelenium:
         many: Если True то вернет несколько записей, если False то вернет только одну
         is_wait: Если True то будет ждать появления элемента в DOM дереве
         _max_wait_time: Сколько(секунд) максимум ожидать
+        error_ok: Если True то при возникновение ошибки (NoSuchElementException|TimeoutException) вернется False, а не исключение
         """
         if not elm:
             elm = self.browser
-
-        if many:
-            if is_wait:
-                # Сколько максимум ждать
-                wait = WebDriverWait(elm, _max_wait_time)
-                # Ожидать пока элемент загрузиться (Ожидание проверки того, что элемент присутствует в DOM страницы и виден. )
-                # https://www.selenium.dev/selenium/docs/api/py/webdriver_support/selenium.webdriver.support.expected_conditions.html
-                # visibility_of_all_elements_located - Все видны
-                # visibility_of_any_elements_located - Виден хотя бы один
-                return wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
+        #
+        try:
+            if many:
+                if is_wait:
+                    # Сколько максимум ждать
+                    wait = WebDriverWait(elm, _max_wait_time)
+                    # Ожидать пока элемент загрузиться (Ожидание проверки того, что элемент присутствует в DOM страницы и виден. )
+                    # https://www.selenium.dev/selenium/docs/api/py/webdriver_support/selenium.webdriver.support.expected_conditions.html
+                    # visibility_of_all_elements_located - Все видны
+                    # visibility_of_any_elements_located - Виден хотя бы один
+                    return wait.until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, css_selector)))
+                else:
+                    return elm.find_elements(By.CSS_SELECTOR, css_selector)
             else:
-                return elm.find_elements(By.CSS_SELECTOR, css_selector)
-        else:
-            if is_wait:
-                # Сколько максимум ждать
-                wait = WebDriverWait(elm, _max_wait_time)
-                # Ожидать пока элемент загрузиться (Ожидание проверки того, что элемент присутствует в DOM страницы и виден. )
-                # https://www.selenium.dev/selenium/docs/api/py/webdriver_support/selenium.webdriver.support.expected_conditions.html
-                return wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
+                if is_wait:
+                    # Сколько максимум ждать
+                    wait = WebDriverWait(elm, _max_wait_time)
+                    # Ожидать пока элемент загрузиться (Ожидание проверки того, что элемент присутствует в DOM страницы и виден. )
+                    # https://www.selenium.dev/selenium/docs/api/py/webdriver_support/selenium.webdriver.support.expected_conditions.html
+                    return wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
+                else:
+                    return elm.find_element(By.CSS_SELECTOR, css_selector)
+        except (NoSuchElementException, TimeoutException) as e:
+            if error_ok:
+                return False
             else:
-                return elm.find_element(By.CSS_SELECTOR, css_selector)
+                raise e
 
     ##
     # Для Tkinter
     ##
+
     def run_tkinter_and_selenium(
         self,
         *args,
@@ -272,16 +283,21 @@ class ViewSelenium:
             # Добавляем пользовательские кнопки в Tkinter. Добавленные кнопки сохраняться в переменную `user_buttons`
             ##
             if tk_button:
+                _i = 1
                 for name_bt, func_bt in tk_button.items():
                     name_bt: str
                     # Функция обработчик нажатия на кнопку
                     func_bt: Callable
                     #
                     tmp_button1 = tk.Button(
-                        self.tk_windows, text=name_bt, command=func_bt, font=_font)
+                        self.tk_windows, text=f"{_i}: {name_bt}", wraplength=100, command=func_bt, font=_font)
                     tmp_button1.pack(side=tk.LEFT, expand=True, fill=tk.X)
                     #
                     self.user_buttons[name_bt] = func_bt
+                    # Обработка нажатия для пользовательских кнопок, цифра клавиши равна порядковому номеру кнопки
+                    self.tk_windows.bind(f'{_i}', lambda *args,
+                                         **kwarg: func_bt())
+                    _i += 1
             # Кнопка вперед
             button_next = tk.Button(self.tk_windows, text="Next",
                                     command=self.TK_OnClickNext, font=_font, bg='#aaffff')
