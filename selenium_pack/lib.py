@@ -166,7 +166,7 @@ class ViewSelenium:
         """
         Вставить куки в страницу
 
-        [{"name": "Название","value": "Значение" }]
+        cookies: [{"name": "Название","value": "Значение" }]
         """
         for c in cookies:
             self.browser.add_cookie(c)
@@ -179,15 +179,19 @@ class ViewSelenium:
             open(self._PathSaveCookies, 'wb')
         )
 
-    def read_cookie(self):
+    def read_and_set_cookie(self):
+        """Прочитать куки из файла `path_save_cookies` и установить их в браузер"""
+        self.set_cookies(self.read_cookie(self._PathSaveCookies))
+
+    @staticmethod
+    def read_cookie(PathSaveCookies: str) -> list[dict[str, str]]:
         """Прочитать куки из файла `path_save_cookies`"""
-        if pathlib.Path(self._PathSaveCookies).exists():
-            self.set_cookies(pickle.load(open(self._PathSaveCookies, 'rb')))
+        if pathlib.Path(PathSaveCookies).exists():
+            return pickle.load(open(PathSaveCookies, 'rb'))
         else:
             raise FileExistsError(
-                f'Нет файла с куки: {pathlib.Path(self._PathSaveCookies).resolve()}, попробуйте сохранить кики в файл через метод `save_cookie`'
+                f'Нет файла с куки: {pathlib.Path(PathSaveCookies).resolve()}, попробуйте сохранить кики в файл через метод `save_cookie`'
             )
-
     ##
     # Поиск HTML элементов
     ##
