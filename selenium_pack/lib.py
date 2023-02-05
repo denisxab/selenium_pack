@@ -40,8 +40,7 @@ class EBrowser:
         win_path_to_browser = r"C:\Program Files\Mozilla Firefox\firefox.exe"
 
         def AntiBot(options: Options):
-            options.add_argument(
-                "user-agent=Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
+            # options.add_argument("user-agent=Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
             options.set_preference("dom.webdriver.enabled", False)
             return options
 
@@ -137,15 +136,13 @@ class ViewSelenium:
         # Поле для информации в Tkinter
         self.text_info: tk.Button | None = None
 
-    def run_selenium(self):
-        """
-        Запуск логики для селениума
-        """
+    def run_selenium(self, *args, **kwargs):
+        """Запуск логики для селениума"""
         ...
 
     def run_tkinter_and_selenium(
         self,
-        tk_button: dict[str, Callable] = None,
+        tk_button: dict[str, Callable] = None, *args, **kwargs
     ):
         """
         Запустить Tkinter
@@ -158,14 +155,21 @@ class ViewSelenium:
             """
             self.tk_windows = tk.Tk()
             self.tk_windows.title("Tkinter From Selenium")
+            _W = 380
+            _H = 450
+            self.tk_windows.geometry('{}x{}'.format(_W, _H))
+            _font = ('Times 14')
             #
             self.text_info = tk.Label(
-                self.tk_windows, text="Поле для Информации")
-            self.text_info.pack()
+                self.tk_windows, text="Поле для Информации", font=_font,
+                # Убираем 10% у ширины окна
+                wraplength=_W-((_W/100)*10), justify="center")
+            self.text_info.pack(side=tk.TOP, expand=True,
+                                fill=tk.X)
             # Кнопка назад
             button_last = tk.Button(self.tk_windows, text="Last",
-                                    command=self.TK_OnClickLast)
-            button_last.pack()
+                                    command=self.TK_OnClickLast, font=_font, bg='#aaffff')
+            button_last.pack(side=tk.LEFT, expand=True, fill=tk.X)
             # Обработка нажатия стелки влево
             self.tk_windows.bind('<Left>', lambda *args,
                                  **kwarg: self.TK_OnClickLast)
@@ -178,14 +182,14 @@ class ViewSelenium:
                     func_bt: Callable
                     #
                     tmp_button1 = tk.Button(
-                        self.tk_windows, text=name_bt, command=func_bt)
-                    tmp_button1.pack()
+                        self.tk_windows, text=name_bt, command=func_bt, font=_font)
+                    tmp_button1.pack(side=tk.LEFT, expand=True, fill=tk.X)
                     #
                     self.user_buttons[name_bt] = func_bt
             # Кнопка вперед
             button_next = tk.Button(self.tk_windows, text="Next",
-                                    command=self.TK_OnClickNext)
-            button_next.pack()
+                                    command=self.TK_OnClickNext, font=_font, bg='#aaffff')
+            button_next.pack(side=tk.RIGHT, expand=True, fill=tk.X)
             # Обработка нажатия стелки вправо
             self.tk_windows.bind('<Right>', lambda *args,
                                  **kwarg: self.TK_OnClickNext())
@@ -197,7 +201,7 @@ class ViewSelenium:
             target=_wrap, args=(), name="Tk_Threading", daemon=True)
         tk_threading.start()
         # После запуска Tkinter в отдельном потоке, выполняем логику для Selenium
-        self.run_selenium()
+        self.run_selenium(*args, **kwargs)
         # Не закрываем поток с Tkinter
         tk_threading.join()
 
@@ -213,9 +217,7 @@ class ViewSelenium:
         self.select_url = url
 
     def close_browser(self):
-        """
-        Закрыть окно браузера
-        """
+        """Закрыть окно браузера"""
         self.browser.close()
         self.browser.quit()
     ##
