@@ -15,7 +15,7 @@ import threading
 import tkinter as tk
 
 
-class GriverBrowser:
+class DriverBrowser:
     # Имя браузера
     name: str
     # Путь к браузеру для Windows по умолчанию
@@ -35,7 +35,7 @@ class EBrowser:
     Настройки для разных браузеров
     """
 
-    class Firefox(GriverBrowser):
+    class Firefox(DriverBrowser):
         name = 'Firefox'
         win_path_to_browser = r"C:\Program Files\Mozilla Firefox\firefox.exe"
 
@@ -48,7 +48,7 @@ class EBrowser:
         def new_options() -> Options:
             return webdriver.FirefoxOptions()
 
-    class Chrome(GriverBrowser):
+    class Chrome(DriverBrowser):
         name = 'Chrome'
         """
         Установка Chrome драйвер на Linux
@@ -79,7 +79,7 @@ class ViewSelenium:
         self,
         executable_path: str,
         path_to_browser: str,
-        type_browser: GriverBrowser,
+        type_browser: DriverBrowser,
         AntiBot=True,
         _options: Options = None,
         _PathSaveCookies: str | pathlib.Path = None,
@@ -133,7 +133,7 @@ class ViewSelenium:
         # Хранения пользовательских кнопок для Tkinter
         self.user_buttons: dict[str, Callable] = {}
         # Поле для информации в Tkinter
-        self.text_entry: tk.Button | None = None
+        self.text_info: tk.Button | None = None
 
     def run_selenium(self):
         """
@@ -157,12 +157,12 @@ class ViewSelenium:
             tk_windows = tk.Tk()
             tk_windows.title("Tkinter From Selenium")
             #
-            self.text_entry = tk.Label(tk_windows, text="Поле для Информации")
-            self.text_entry.pack()
-            # Кнопка вперед
-            button1 = tk.Button(tk_windows, text="Next",
-                                command=self.TK_OnClickNext)
-            button1.pack()
+            self.text_info = tk.Label(tk_windows, text="Поле для Информации")
+            self.text_info.pack()
+            # Кнопка назад
+            button_last = tk.Button(tk_windows, text="Last",
+                                command=self.TK_OnClickLast)
+            button_last.pack()
             ##
             # Добавляем пользовательские кнопки в Tkinter. Добавленные кнопки сохраняться в переменную `user_buttons`
             ##
@@ -176,10 +176,10 @@ class ViewSelenium:
                     tmp_button1.pack()
                     #
                     self.user_buttons[name_bt] = func_bt
-            # Кнопка назад
-            button2 = tk.Button(tk_windows, text="Last",
-                                command=self.TK_OnClickLast)
-            button2.pack()
+            # Кнопка вперед
+            button_next = tk.Button(tk_windows, text="Next",
+                                command=self.TK_OnClickNext)
+            button_next.pack()
             #
             tk_windows.mainloop()
 
@@ -284,21 +284,14 @@ class ViewSelenium:
     ##
 
     def TK_OnClickNext(self):
-        """
-        Обработчик события нажатия кнопки вперед(вправо)
-        """
+        """Обработчик события нажатия кнопки вперед(вправо)"""
         ...
 
     def TK_OnClickLast(self):
-        """
-        Обработчик события нажатия кнопки назад(влево)
-        """
+        """Обработчик события нажатия кнопки назад(влево)"""
         ...
 
-    def TK_SetLabelInfo(self, text: str):
-        """
-        Вставить указанный текст в поле информации
-        """
-        self.text_entry.config(text=text)
-
-    # def TK_
+    def TK_UpdateInfo(self, text: str):
+        """Вставить указанный текст в поле для информации"""
+        print('TK_UpdateInfo:\t', text)
+        self.text_info.config(text=text)
