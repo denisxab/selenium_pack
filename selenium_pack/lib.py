@@ -128,7 +128,7 @@ class ViewSelenium:
         self.select_url: str = ''
         ##
         # Переменные для Tkinter
-        ##
+        ## 
         # Главное приложения Tkinter
         self.tk_windows: tk.Tk
         # Хранения пользовательских кнопок для Tkinter
@@ -137,81 +137,8 @@ class ViewSelenium:
         self.text_info: tk.Button | None = None
 
     def run_selenium(self, *args, **kwargs):
-        """Запуск логики для селениума"""
+        """Запуск логики для Selenium"""
         ...
-
-    def run_tkinter_and_selenium(
-        self,
-        *args,
-        tk_button: dict[str, Callable] = None,
-        width_windows_px: int = 380,
-        height_windows_px: int = 450,
-        **kwargs
-    ):
-        """
-        Запустить Tkinter
-
-        tk_button: Кнопки для взаимодействия, которые будут доступны в Tkinter {"ИмяДляКнопки":ФункцияОбработчик}
-        width_windows_px: Широта окна 
-        height_windows_px: Высота окна
-        """
-
-        def _wrap():
-            """
-            Логика для запуска Tkinter в отдельном потоке
-            """
-            self.tk_windows = tk.Tk()
-            self.tk_windows.title("Tkinter From Selenium")
-
-            #
-            self.tk_windows.geometry('{}x{}'.format(
-                width_windows_px, height_windows_px))
-            _font = ('Times 14')
-            #
-            self.text_info = tk.Label(
-                self.tk_windows, text="Поле для Информации", font=_font,
-                # Убираем 10% у ширины окна
-                wraplength=width_windows_px-((width_windows_px/100)*10), justify="center")
-            self.text_info.pack(side=tk.TOP, expand=True,
-                                fill=tk.X)
-            # Кнопка назад
-            button_last = tk.Button(self.tk_windows, text="Last",
-                                    command=self.TK_OnClickLast, font=_font, bg='#aaffff')
-            button_last.pack(side=tk.LEFT, expand=True, fill=tk.X)
-            # Обработка нажатия стелки влево
-            self.tk_windows.bind('<Left>', lambda *args,
-                                 **kwarg: self.TK_OnClickLast)
-            ##
-            # Добавляем пользовательские кнопки в Tkinter. Добавленные кнопки сохраняться в переменную `user_buttons`
-            ##
-            if tk_button:
-                for name_bt, func_bt in tk_button.items():
-                    name_bt: str
-                    func_bt: Callable
-                    #
-                    tmp_button1 = tk.Button(
-                        self.tk_windows, text=name_bt, command=func_bt, font=_font)
-                    tmp_button1.pack(side=tk.LEFT, expand=True, fill=tk.X)
-                    #
-                    self.user_buttons[name_bt] = func_bt
-            # Кнопка вперед
-            button_next = tk.Button(self.tk_windows, text="Next",
-                                    command=self.TK_OnClickNext, font=_font, bg='#aaffff')
-            button_next.pack(side=tk.RIGHT, expand=True, fill=tk.X)
-            # Обработка нажатия стелки вправо
-            self.tk_windows.bind('<Right>', lambda *args,
-                                 **kwarg: self.TK_OnClickNext())
-            #
-            self.tk_windows.mainloop()
-
-        # Запуск Tkinter в отдельном потоке
-        tk_threading = threading.Thread(
-            target=_wrap, args=(), name="Tk_Threading", daemon=True)
-        tk_threading.start()
-        # После запуска Tkinter в отдельном потоке, выполняем логику для Selenium
-        self.run_selenium(*args, **kwargs)
-        # Не закрываем поток с Tkinter
-        tk_threading.join()
 
     ##
     # Работа с непосредственным браузером
@@ -301,6 +228,78 @@ class ViewSelenium:
     ##
     # Для Tkinter
     ##
+    def run_tkinter_and_selenium(
+        self,
+        *args,
+        tk_button: dict[str, Callable] = None,
+        width_windows_px: int = 380,
+        height_windows_px: int = 450,
+        **kwargs
+    ):
+        """
+        Запустить Tkinter
+
+        tk_button: Кнопки для взаимодействия, которые будут доступны в Tkinter {"ИмяДляКнопки":ФункцияОбработчик}
+        width_windows_px: Широта окна 
+        height_windows_px: Высота окна
+        """
+
+        def _wrap():
+            """
+            Логика для запуска Tkinter в отдельном потоке
+            """
+            self.tk_windows = tk.Tk()
+            self.tk_windows.title("Tkinter From Selenium")
+
+            #
+            self.tk_windows.geometry('{}x{}'.format(
+                width_windows_px, height_windows_px))
+            _font = ('Times 14')
+            #
+            self.text_info = tk.Label(
+                self.tk_windows, text="Поле для Информации", font=_font,
+                # Убираем 10% у ширины окна
+                wraplength=width_windows_px-((width_windows_px/100)*10), justify="center")
+            self.text_info.pack(side=tk.TOP, expand=True, fill=tk.X)
+            # Кнопка назад
+            button_last = tk.Button(self.tk_windows, text="Last",
+                                    command=self.TK_OnClickLast, font=_font, bg='#aaffff')
+            button_last.pack(side=tk.LEFT, expand=True, fill=tk.X)
+            # Обработка нажатия стелки влево
+            self.tk_windows.bind('<Left>', lambda *args,
+                                 **kwarg: self.TK_OnClickLast)
+            ##
+            # Добавляем пользовательские кнопки в Tkinter. Добавленные кнопки сохраняться в переменную `user_buttons`
+            ##
+            if tk_button:
+                for name_bt, func_bt in tk_button.items():
+                    name_bt: str
+                    # Функция обработчик нажатия на кнопку
+                    func_bt: Callable
+                    #
+                    tmp_button1 = tk.Button(
+                        self.tk_windows, text=name_bt, command=func_bt, font=_font)
+                    tmp_button1.pack(side=tk.LEFT, expand=True, fill=tk.X)
+                    #
+                    self.user_buttons[name_bt] = func_bt
+            # Кнопка вперед
+            button_next = tk.Button(self.tk_windows, text="Next",
+                                    command=self.TK_OnClickNext, font=_font, bg='#aaffff')
+            button_next.pack(side=tk.RIGHT, expand=True, fill=tk.X)
+            # Обработка нажатия стелки вправо
+            self.tk_windows.bind('<Right>', lambda *args,
+                                 **kwarg: self.TK_OnClickNext())
+            #
+            self.tk_windows.mainloop()
+
+        # Запуск Tkinter в отдельном потоке
+        tk_threading = threading.Thread(
+            target=_wrap, args=(), name="Tk_Threading", daemon=True)
+        tk_threading.start()
+        # После запуска Tkinter в отдельном потоке, выполняем логику для Selenium
+        self.run_selenium(*args, **kwargs)
+        # Не закрываем поток с Tkinter
+        tk_threading.join()
 
     def TK_OnClickNext(self):
         """Обработчик события нажатия кнопки вперед(вправо)"""
