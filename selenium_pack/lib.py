@@ -1,6 +1,8 @@
 """
 Модуль для удобной работы с Selenium
 """
+from collections import deque
+from requests_html import HTMLSession, AsyncHTMLSession, HTMLResponse
 import pathlib
 import pickle
 from selenium import webdriver
@@ -54,7 +56,7 @@ class EBrowser:
         name = 'Chrome'
         """
         Установка Chrome драйвер на Linux
-        
+
         1. sudo apt install chromium-chromedriver
         2. executable_path="/usr/lib/chromium-browser/chromedriver"
         """
@@ -255,7 +257,7 @@ class ViewSelenium:
         Запустить Tkinter
 
         tk_button: Кнопки для взаимодействия, которые будут доступны в Tkinter {"ИмяДляКнопки":ФункцияОбработчик}
-        width_windows_px: Широта окна 
+        width_windows_px: Широта окна
         height_windows_px: Высота окна
         """
 
@@ -333,3 +335,53 @@ class ViewSelenium:
         """Вставить указанный текст в поле для информации"""
         print('TK_UpdateInfo:\t', text)
         self.text_info.config(text=text)
+
+
+class _RequestsPackBase():
+
+    session_sync = HTMLSession()
+
+    @classmethod
+    def get(cls, url: list[str], cookies: dict[str, str], headers: dict[str, str]) -> HTMLResponse:
+        """
+        Сделать один GET запрос
+
+        return: Ответ
+        """
+        return cls.session_sync.get(
+            url, cookies=cookies, headers=headers
+        )
+
+
+class _RequestsPackAsync():
+    """
+    Удобное взаимодействие с библиотекой `requests_html`
+    """
+
+    session_async = AsyncHTMLSession()
+
+    @classmethod
+    def get_many(cls, urls: list[str], cookies: dict[str, str], headers: dict[str, str]) -> deque[HTMLResponse]:
+        """
+        Сделать несколько асинхронных GET запросов
+
+        return: Ответы
+        """
+        async def _wrap():
+            res = deque()
+            for url in urls:
+                res.append(
+                    await cls.session_async.get(
+                        url, cookies=cookies, headers=headers
+                    )
+                )
+            return res
+
+        return cls.session_async.run(_wrap)
+
+
+class RequestsPack(_RequestsPackBase, _RequestsPackAsync):
+    """
+    Класс для экспорта
+    """
+    ...
