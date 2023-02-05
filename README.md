@@ -33,8 +33,8 @@ if __name__ == '__main__':
 
 - `set_cookies`
 - `save_cookie`
-- `read_and_set_cookie`
 - `read_cookie`
+- `read_and_set_cookie`
 
 ### Поиск HTML элементов
 
