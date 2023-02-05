@@ -353,13 +353,13 @@ class _RequestsPackBase():
 
         return: Ответ
         """
-        res = cls.session_sync.get(
+        _res: HTMLResponse = cls.session_sync.get(
             url, cookies=cookies, headers=headers
         )
         # Если True то отренедрит JavaScript
         if render:
-            res.html.render()
-        return res
+            _res.html.render()
+        return _res
 
 
 class _RequestsPackAsync():
@@ -379,16 +379,16 @@ class _RequestsPackAsync():
         return: Ответы
         """
         async def _wrap():
-            res = deque()
+            _res = deque()
             for url in urls:
-                _r = await cls.session_async.get(
+                _r: HTMLResponse = await cls.session_async.get(
                     url, cookies=cookies, headers=headers
                 )
                 # Если True то отренедрит JavaScript
                 if render:
                     await _r.html.arender()
-                res.append(_r)
-            return res
+                _res.append(_r)
+            return _res
 
         return cls.session_async.run(_wrap)
 
