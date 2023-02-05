@@ -130,6 +130,8 @@ class ViewSelenium:
         ##
         # Переменные для Tkinter
         ##
+        # Главное приложения Tkinter
+        self.tk_windows: tk.Tk
         # Хранения пользовательских кнопок для Tkinter
         self.user_buttons: dict[str, Callable] = {}
         # Поле для информации в Tkinter
@@ -154,15 +156,19 @@ class ViewSelenium:
             """
             Логика для запуска Tkinter в отдельном потоке
             """
-            tk_windows = tk.Tk()
-            tk_windows.title("Tkinter From Selenium")
+            self.tk_windows = tk.Tk()
+            self.tk_windows.title("Tkinter From Selenium")
             #
-            self.text_info = tk.Label(tk_windows, text="Поле для Информации")
+            self.text_info = tk.Label(
+                self.tk_windows, text="Поле для Информации")
             self.text_info.pack()
             # Кнопка назад
-            button_last = tk.Button(tk_windows, text="Last",
-                                command=self.TK_OnClickLast)
+            button_last = tk.Button(self.tk_windows, text="Last",
+                                    command=self.TK_OnClickLast)
             button_last.pack()
+            # Обработка нажатия стелки влево
+            self.tk_windows.bind('<Left>', lambda *args,
+                                 **kwarg: self.TK_OnClickLast)
             ##
             # Добавляем пользовательские кнопки в Tkinter. Добавленные кнопки сохраняться в переменную `user_buttons`
             ##
@@ -172,16 +178,19 @@ class ViewSelenium:
                     func_bt: Callable
                     #
                     tmp_button1 = tk.Button(
-                        tk_windows, text=name_bt, command=func_bt)
+                        self.tk_windows, text=name_bt, command=func_bt)
                     tmp_button1.pack()
                     #
                     self.user_buttons[name_bt] = func_bt
             # Кнопка вперед
-            button_next = tk.Button(tk_windows, text="Next",
-                                command=self.TK_OnClickNext)
+            button_next = tk.Button(self.tk_windows, text="Next",
+                                    command=self.TK_OnClickNext)
             button_next.pack()
+            # Обработка нажатия стелки вправо
+            self.tk_windows.bind('<Right>', lambda *args,
+                                 **kwarg: self.TK_OnClickNext())
             #
-            tk_windows.mainloop()
+            self.tk_windows.mainloop()
 
         # Запуск Tkinter в отдельном потоке
         tk_threading = threading.Thread(
