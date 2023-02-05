@@ -1,4 +1,6 @@
-
+"""
+Модуль с общим полезным функционалом
+"""
 from http.cookies import SimpleCookie
 
 

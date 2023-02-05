@@ -1,3 +1,6 @@
+"""
+Модуль для удобной работы с Selenium
+"""
 import pathlib
 import pickle
 from selenium import webdriver
@@ -7,6 +10,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as EC
+from typing import Callable
+import threading
+import tkinter as tk
 
 
 class GriverBrowser:
@@ -83,10 +89,10 @@ class ViewSelenium:
 
         executable_path: Путь к драйверу geckodriver
         path_to_browser: Путь к браузеру
-        options: Опции для браузера
         type_browser: Тип браузера
-        _PathSaveCookies: Путь для сохранения куки
         AntiBot: Если True то будет применять настройки для скрытия бота
+        _options: Опции для браузера
+        _PathSaveCookies: Путь для сохранения куки
 
         ======================================================
 
@@ -94,7 +100,7 @@ class ViewSelenium:
         - linux:https://github.com/mozilla/geckodriver/releases/latest
         """
         # Путь для сохранения куки
-        self._PathSaveCookies = _PathSaveCookies
+        self._PathSaveCookies = _PathSaveCookies if _PathSaveCookies else self._PathSaveCookies
         # Опции по умолчанию для каждого браузера
         if not _options:
             _options = type_browser.new_options()
@@ -116,9 +122,86 @@ class ViewSelenium:
                     executable_path=executable_path,
                     options=_options
                 )
+        ##
+        # Переменные который будут сохранять стояние браузера
+        ##
+        # Текущий URL. Он обновляется если открывать URL через метод `self.get(URL)`
+        self.select_url: str = ''
+        ##
+        # Переменные для Tkinter
+        ##
+        # Хранения пользовательских кнопок для Tkinter
+        self.user_buttons: dict[str, Callable] = {}
+        # Поле для информации в Tkinter
+        self.text_entry: tk.Button | None = None
+
+    def run_selenium(self):
+        """
+        Запуск логики для селениума
+        """
+        ...
+
+    def run_tkinter_and_selenium(
+        self,
+        tk_button: dict[str, Callable] = None,
+    ):
+        """
+        Запустить Tkinter
+
+        tk_button: Кнопки взаимодействия  {"ИмяДляКнопки":ФункцияОбработчик}
+        """
+        def _wrap():
+            """
+            Логика для запуска Tkinter в отдельном потоке
+            """
+            tk_windows = tk.Tk()
+            tk_windows.title("Tkinter From Selenium")
+            #
+            self.text_entry = tk.Label(tk_windows, text="Поле для Информации")
+            self.text_entry.pack()
+            # Кнопка вперед
+            button1 = tk.Button(tk_windows, text="Next",
+                                command=self.TK_OnClickNext)
+            button1.pack()
+            ##
+            # Добавляем пользовательские кнопки в Tkinter. Добавленные кнопки сохраняться в переменную `user_buttons`
+            ##
+            if tk_button:
+                for name_bt, func_bt in tk_button.items():
+                    name_bt: str
+                    func_bt: Callable
+                    #
+                    tmp_button1 = tk.Button(
+                        tk_windows, text=name_bt, command=func_bt)
+                    tmp_button1.pack()
+                    #
+                    self.user_buttons[name_bt] = func_bt
+            # Кнопка назад
+            button2 = tk.Button(tk_windows, text="Last",
+                                command=self.TK_OnClickLast)
+            button2.pack()
+            #
+            tk_windows.mainloop()
+
+        # Запуск Tkinter в отдельном потоке
+        tk_threading = threading.Thread(
+            target=_wrap, args=(), name="Tk_Threading", daemon=True)
+        tk_threading.start()
+        # После запуска Tkinter в отдельном потоке, выполняем логику для Selenium
+        self.run_selenium()
+        # Не закрываем поток с Tkinter
+        tk_threading.join()
+
     ##
     # Работа с непосредственным браузером
     ##
+
+    def get(self, url: str):
+        """Перейти на указанный Url в браузере"""
+        # Переходим на указанный URL
+        self.browser.get(url)
+        # Обновляем текущий URL
+        self.select_url = url
 
     def close_browser(self):
         """
@@ -195,3 +278,27 @@ class ViewSelenium:
                 return wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector)))
             else:
                 return elm.find_element(By.CSS_SELECTOR, css_selector)
+
+    ##
+    # Для Tkinter
+    ##
+
+    def TK_OnClickNext(self):
+        """
+        Обработчик события нажатия кнопки вперед(вправо)
+        """
+        ...
+
+    def TK_OnClickLast(self):
+        """
+        Обработчик события нажатия кнопки назад(влево)
+        """
+        ...
+
+    def TK_SetLabelInfo(self, text: str):
+        """
+        Вставить указанный текст в поле информации
+        """
+        self.text_entry.config(text=text)
+
+    # def TK_
