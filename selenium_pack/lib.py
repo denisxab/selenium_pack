@@ -142,28 +142,36 @@ class ViewSelenium:
 
     def run_tkinter_and_selenium(
         self,
-        tk_button: dict[str, Callable] = None, *args, **kwargs
+        *args,
+        tk_button: dict[str, Callable] = None,
+        width_windows_px: int = 380,
+        height_windows_px: int = 450,
+        **kwargs
     ):
         """
         Запустить Tkinter
 
-        tk_button: Кнопки взаимодействия  {"ИмяДляКнопки":ФункцияОбработчик}
+        tk_button: Кнопки для взаимодействия, которые будут доступны в Tkinter {"ИмяДляКнопки":ФункцияОбработчик}
+        width_windows_px: Широта окна 
+        height_windows_px: Высота окна
         """
+
         def _wrap():
             """
             Логика для запуска Tkinter в отдельном потоке
             """
             self.tk_windows = tk.Tk()
             self.tk_windows.title("Tkinter From Selenium")
-            _W = 380
-            _H = 450
-            self.tk_windows.geometry('{}x{}'.format(_W, _H))
+
+            #
+            self.tk_windows.geometry('{}x{}'.format(
+                width_windows_px, height_windows_px))
             _font = ('Times 14')
             #
             self.text_info = tk.Label(
                 self.tk_windows, text="Поле для Информации", font=_font,
                 # Убираем 10% у ширины окна
-                wraplength=_W-((_W/100)*10), justify="center")
+                wraplength=width_windows_px-((width_windows_px/100)*10), justify="center")
             self.text_info.pack(side=tk.TOP, expand=True,
                                 fill=tk.X)
             # Кнопка назад
